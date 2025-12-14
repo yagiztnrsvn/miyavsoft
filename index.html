@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>MiyavSoft - WhatsApp Bağlantısı</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
+        h2 { color: #1c1e21; margin-top: 0; }
+        p { color: #606770; margin-bottom: 30px; line-height: 1.5; }
+        .btn { background-color: #1877f2; color: white; padding: 14px 28px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; transition: background 0.3s; width: 100%; }
+        .btn:hover { background-color: #166fe5; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="loginCard">
+        <h2>WhatsApp Bağlantısı</h2>
+        <p>Müşterilerinize otomatik mesaj gönderebilmek için lütfen Facebook hesabınızla giriş yapın.</p>
+        <button class="btn" onclick="loginWithFacebook()">Facebook ile Bağlan</button>
+    </div>
+
+    <div id="status" style="margin-top: 20px; color: #666; font-size: 14px;"></div>
+
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : '33837884045798705', // <--- BURAYA APP ID YAPIŞTIR
+          cookie     : true,
+          xfbml      : true,
+          version    : 'v18.0'
+        });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "https://connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+
+      function loginWithFacebook() {
+        document.getElementById('status').innerText = "Facebook'a bağlanılıyor...";
+        
+        FB.login(function(response) {
+            if (response.authResponse) {
+                console.log('Giriş başarılı, Token:', response.authResponse.accessToken);
+                document.getElementById('status').innerText = "Giriş başarılı! Yönlendiriliyor...";
+                
+                // C# tarafına veriyi gönder
+                if(window.chrome && window.chrome.webview) {
+                    var data = {
+                        token: response.authResponse.accessToken,
+                        userID: response.authResponse.userID
+                    };
+                    window.chrome.webview.postMessage(JSON.stringify(data));
+                } else {
+                    alert("Başarılı! (Token alındı ancak WebView dışında olduğunuz için iletilemedi)");
+                }
+            } else {
+                document.getElementById('status').innerText = "Giriş iptal edildi.";
+            }
+        }, {
+            // WhatsApp yetkilerini istiyoruz
+            scope: 'whatsapp_business_management, whatsapp_business_messaging'
+        });
+      }
+    </script>
+</body>
+</html>
